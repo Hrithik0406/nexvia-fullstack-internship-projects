@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: fs01_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password123
+      POSTGRES_DB: fs01_marketplace
+    ports:
+      - "5432:5432"
+    volumes:
+      - fs01_pgdata:/var/lib/postgresql/data
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: fs01_backend
+    restart: always
+    environment:
+      PORT: 5000
+      DATABASE_URL: "postgresql://postgres:password123@postgres:5432/fs01_marketplace?schema=public"
+      JWT_SECRET: "nexvia_multivendor_secret_key_2026"
+    ports:
+      - "5000:5000"
+    depends_on:
+      - postgres
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: fs01_frontend
+    restart: always
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+
+volumes:
+  fs01_pgdata:

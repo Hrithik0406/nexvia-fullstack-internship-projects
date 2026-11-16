@@ -1,0 +1,140 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          String       @id @default(uuid())
+  email       String       @unique
+  password    String
+  name        String
+  role        String       @default("STUDENT") // STUDENT, INSTRUCTOR, ADMIN
+  avatarUrl   String?
+  bio         String?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  coursesCreated Course[]   @relation("InstructorCourses")
+  enrollments    Enrollment[]
+  quizSubmissions QuizSubmission[]
+  certificates   Certificate[]
+}
+
+model Course {
+  id          String       @id @default(uuid())
+  title       String
+  slug        String       @unique
+  description String
+  thumbnail   String
+  price       Float        @default(0.0)
+  level       String       @default("Intermediate") // Beginner, Intermediate, Advanced
+  category    String       @default("Engineering")
+  published   Boolean      @default(true)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  instructorId String
+  instructor   User        @relation("InstructorCourses", fields: [instructorId], references: [id])
+
+  modules      Module[]
+  enrollments  Enrollment[]
+  liveSessions LiveSession[]
+  quizzes      Quiz[]
+  certificates Certificate[]
+}
+
+model Module {
+  id         String   @id @default(uuid())
+  title      String
+  orderIndex Int
+  courseId   String
+  course     Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  lessons    Lesson[]
+}
+
+model Lesson {
+  id              String   @id @default(uuid())
+  title           String
+  videoUrl        String
+  durationMinutes Int      @default(15)
+  content         String?
+  orderIndex      Int
+  moduleId        String
+  module          Module   @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+}
+
+model Enrollment {
+  id              String    @id @default(uuid())
+  userId          String
+  courseId        String
+  progressPercent Float     @default(0.0)
+  completed       Boolean   @default(false)
+  enrolledAt      DateTime  @default(now())
+  completedAt     DateTime?
+
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course          Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, courseId])
+}
+
+model LiveSession {
+  id              String   @id @default(uuid())
+  title           String
+  description     String?
+  scheduledAt     DateTime
+  durationMinutes Int      @default(60)
+  status          String   @default("SCHEDULED") // SCHEDULED, LIVE, ENDED
+  meetingRoomId   String   @default("nexvia-lms-room")
+  courseId        String
+  course          Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+}
+
+model Quiz {
+  id           String           @id @default(uuid())
+  title        String
+  passingScore Int              @default(70) // Percentage
+  courseId     String
+  course       Course           @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  questions    QuizQuestion[]
+  submissions  QuizSubmission[]
+}
+
+model QuizQuestion {
+  id           String   @id @default(uuid())
+  question     String
+  optionsJson  String   // JSON string array of options: ["Option A", "Option B", ...]
+  correctIndex Int      // Index 0-3
+  quizId       String
+  quiz         Quiz     @relation(fields: [quizId], references: [id], onDelete: Cascade)
+}
+
+model QuizSubmission {
+  id          String   @id @default(uuid())
+  userId      String
+  quizId      String
+  score       Int      // Percentage
+  passed      Boolean
+  submittedAt DateTime @default(now())
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  quiz        Quiz     @relation(fields: [quizId], references: [id], onDelete: Cascade)
+}
+
+model Certificate {
+  id                String   @id @default(uuid())
+  certificateNumber String   @unique
+  userId            String
+  courseId          String
+  issueDate         DateTime @default(now())
+  grade             String   @default("Excellence")
+
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course            Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, courseId])
+}

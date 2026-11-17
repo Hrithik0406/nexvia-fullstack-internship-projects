@@ -7,7 +7,7 @@ import { MyOrdersView } from './components/MyOrdersView';
 import { CartDrawer } from './components/CartDrawer';
 import { Product, Category, CartItem, User } from './types';
 
-const API_BASE = import.meta.env.VITE_API_URL || '';
+const API_BASE = import.meta.env.VITE_API_URL || 'https://nexvia-fs01-api.onrender.com';
 
 // Fallback initial catalog to ensure the live reviewer ALWAYS sees products instantly
 const INITIAL_CATEGORIES: Category[] = [

@@ -9,7 +9,7 @@ import { QuizModal } from './components/QuizModal';
 import { CertificateModal } from './components/CertificateModal';
 import { Course, User, LiveSession, Quiz, Certificate } from './types';
 
-const API_BASE = import.meta.env.VITE_API_URL || '';
+const API_BASE = (import.meta as any).env?.VITE_API_URL || 'https://nexvia-fs03-api.onrender.com';
 
 const INITIAL_COURSES: Course[] = [
   {
